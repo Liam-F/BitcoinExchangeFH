@@ -146,10 +146,11 @@ class RestApiExchange(Exchange):
     def _update_order_book(self, symbol, instmt_info, is_update_handler=True):
         """Callback order book.
         """
-        self._load_balance()
         tolerence_count = 0
+        order_book = None
 
         while tolerence_count < self.TIMEOUT_TOLERANCE:
+            self._load_balance()
             try:
                 order_book = self._exchange_interface.fetch_order_book(
                     symbol=symbol)
@@ -157,6 +158,11 @@ class RestApiExchange(Exchange):
             except (RequestTimeout, NetworkError) as e:
                 tolerence_count += 1
                 LOGGER.warning('Request timeout %s', e)
+
+        if order_book is None:
+            raise RuntimeError(
+                'Cannot load the order book after failover. '
+                'Please check the exceptions before and network connection')
 
         bids = order_book['bids']
         asks = order_book['asks']
@@ -177,16 +183,22 @@ class RestApiExchange(Exchange):
     def _update_trades(self, symbol, instmt_info, is_update_handler=True):
         """Update trades.
         """
-        self._load_balance()
         tolerence_count = 0
+        trades = None
 
         while tolerence_count < self.TIMEOUT_TOLERANCE:
+            self._load_balance()
             try:
                 trades = self._exchange_interface.fetch_trades(symbol=symbol)
                 break
             except (RequestTimeout, NetworkError) as e:
                 tolerence_count += 1
                 LOGGER.warning('Request timeout %s', e)
+
+        if trades is None:
+            raise RuntimeError(
+                'Cannot load the trades after failover. '
+                'Please check the exceptions before and network connection')
 
         current_timestamp = datetime.utcnow()
 

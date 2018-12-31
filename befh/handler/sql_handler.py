@@ -103,6 +103,8 @@ class SqlHandler(Handler):
         from alembic.migration import MigrationContext
         from alembic.operations import Operations
 
+        # Refresh the connection again
+        self._engine = create_engine(self._connection)
         conn = self._engine.connect()
         ctx = MigrationContext.configure(conn)
         op = Operations(ctx)
@@ -111,8 +113,6 @@ class SqlHandler(Handler):
         if keep_table:
             assert fields is not None, (
                 "Fields must be provided to create the table")
-            # Refresh the connection again
-            self._engine = create_engine(self._connection)
             self.create_table(
                 table_name=from_name,
                 fields=fields)

@@ -16,6 +16,8 @@ class Handler:
     """Handler.
     """
 
+    MAXIMUM_FAILURE_TOLERANCE = 2
+
     def __init__(self, is_debug, is_cold,
                  is_rotate=False,
                  rotate_frequency='%Y%m%d',
@@ -129,16 +131,17 @@ class Handler:
                 assert isinstance(element, HandlerOperator), (
                     "Element type is not handler operator (%s)" % (
                         element.__class__.__name__))
-                try:
-                    element.execute(handler=self)
-                except Exception as e:
-                    if element.allow_fail:
-                        LOGGER.warn(
-                            'Execution failed on element %s (%s)',
-                            element,
-                            str(e))
-                    else:
-                        raise
+
+                failure_count = 0
+
+                while failure_count < self.MAXIMUM_FAILURE_TOLERANCE:
+                    try:
+                        element.execute(handler=self)
+                        break
+                    except Exception as e:
+                        failure_count += 1
+                        if not self._should_rerun(element, exception):
+                            break
 
             sleep(self._batch_frequency)
 
@@ -155,3 +158,15 @@ class Handler:
         """
         LOGGER.debug('Publishing close operator')
         self._is_running = False
+
+    def _should_rerun(element, exception):
+        """Indicate whether the loop should rerun
+        """
+        if element.allow_fail:
+            LOGGER.warn(
+                'Execution failed on element %s (%s)',
+                element,
+                str(exception))
+            return element.should_rerun
+        else:
+            raise

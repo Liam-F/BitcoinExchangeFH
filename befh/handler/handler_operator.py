@@ -2,10 +2,11 @@ class HandlerOperator:
     """Handler operator.
     """
 
-    def __init__(self, allow_fail=False):
+    def __init__(self, allow_fail=False, should_rerun=False):
         """Constructor.
         """
         self.allow_fail = allow_fail
+        self.should_rerun = should_rerun
 
     def execute(self, handler):
         """Execute.

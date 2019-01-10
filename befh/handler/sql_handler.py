@@ -162,3 +162,23 @@ class SqlHandler(Handler):
             field_params['autoincrement'] = True
 
         return Column(field_name, field_type, **field_params)
+
+    def _should_rerun(element, exception):
+        """Handle exception.
+        """
+        if element.allow_fail:
+            LOGGER.warn(
+                'Execution failed on element %s (%s)',
+                element,
+                str(exception))
+            return element.should_rerun
+            if element.should_rerun:
+                return True
+            else:
+                return False
+        elif 'MySQL server has gone away' in str(exception):
+            # Only for MySQL case:
+            # Shuold rerun on MySQL server gone
+            return True
+        else:
+            raise

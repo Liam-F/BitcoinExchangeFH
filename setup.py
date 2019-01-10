@@ -22,6 +22,11 @@ test_requirements = [
     'pytest',
 ]
 
+extra_requirements = {
+    ":python_version>='3.5.3'": ["cryptofeed"],
+}
+
+
 setup(
     name='BitcoinExchangeFH',
     use_scm_version=True,
@@ -53,4 +58,5 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     setup_requires=setup_requirements,
+    extras_require=extra_requirements,
 )

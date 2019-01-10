@@ -2,10 +2,6 @@ import logging
 import multiprocessing as mp
 from datetime import datetime
 
-from befh.exchange import (
-    RestApiExchange
-)
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -109,13 +105,28 @@ class Runner:
             exchange_name, subscription, handlers, is_debug, is_cold):
         """Create exchange.
         """
-        exchange = RestApiExchange(
-            name=exchange_name,
-            config=subscription,
-            is_debug=is_debug,
-            is_cold=is_cold)
+        try:
+            from befh.exchange.websocket_exchange import WebsocketExchange
+            exchange = WebsocketExchange(
+                name=exchange_name,
+                config=subscription,
+                is_debug=is_debug,
+                is_cold=is_cold)
 
-        exchange.load(handlers=handlers)
+            exchange.load(handlers=handlers)
+
+        except ImportError as error:
+            LOGGER.info(
+                'Cannot load websocket exchange %s and fall into '
+                'REST api exchange', exchange_name)
+            from befh.exchange.rest_api_exchange import RestApiExchange
+            exchange = RestApiExchange(
+                name=exchange_name,
+                config=subscription,
+                is_debug=is_debug,
+                is_cold=is_cold)
+
+            exchange.load(handlers=handlers)
 
         return exchange
 

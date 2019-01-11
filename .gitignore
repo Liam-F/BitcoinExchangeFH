@@ -63,3 +63,6 @@ target/
 
 # Test data
 .data/
+
+# Development environment
+.env/

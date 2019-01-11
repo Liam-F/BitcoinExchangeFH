@@ -29,11 +29,15 @@ class WebsocketExchange(RestApiExchange):
         """
         super().load(is_initialize_instmt=False, **kwargs)
         self._feed_handler = FeedHandler()
-        self._instrument_mapping = self._create_instrument_mapping(
-            self._instruments)
-        exchange = getattr(
-            cryptofeed_exchanges,
-            self._get_exchange_name(self._name))
+        self._instrument_mapping = self._create_instrument_mapping()
+        try:
+            exchange = getattr(
+                cryptofeed_exchanges,
+                self._get_exchange_name(self._name))
+        except AttributeError as e:
+            raise ImportError(
+                'Cannot load exchange %s from websocket' % self._name)
+
         callbacks = {
             L2_BOOK: BookCallback(self._update_order_book_callback),
             TRADES: TradeCallback(self._update_trade_callback)
@@ -66,13 +70,14 @@ class WebsocketExchange(RestApiExchange):
 
         return name
 
-    @staticmethod
-    def _create_instrument_mapping(instruments):
+    def _create_instrument_mapping(self):
         """Create instrument mapping.
         """
         mapping = {}
-        for name in instruments.keys():
-            mapping[name.replace('/', '-')] = name
+        for name in self._instruments.keys():
+            market = self._exchange_interface.markets[name]
+            normalized_name = market['baseId'] + '-' + market['quoteId']
+            mapping[normalized_name] = name
 
         return mapping
 

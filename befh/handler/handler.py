@@ -138,10 +138,14 @@ class Handler:
                     try:
                         element.execute(handler=self)
                         break
-                    except Exception as e:
+                    except Exception as exception:
                         failure_count += 1
                         if not self._should_rerun(element, exception):
-                            break
+                            raise
+
+                        LOGGER.warning(
+                            'Element will be executed again due to the '
+                            'failure with count %d', failure_count)
 
             sleep(self._batch_frequency)
 

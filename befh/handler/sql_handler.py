@@ -163,7 +163,7 @@ class SqlHandler(Handler):
 
         return Column(field_name, field_type, **field_params)
 
-    def _should_rerun(element, exception):
+    def _should_rerun(self, element, exception):
         """Handle exception.
         """
         if element.allow_fail:

@@ -163,7 +163,7 @@ class Handler:
         LOGGER.debug('Publishing close operator')
         self._is_running = False
 
-    def _should_rerun(element, exception):
+    def _should_rerun(self, element, exception):
         """Indicate whether the loop should rerun
         """
         if element.allow_fail:
